@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+	
+    <at.ac.tuwien.igw.group9.molog.log.GraphView
+        android:id="@+id/gsrGraph"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="4" />
+
+   <at.ac.tuwien.igw.group9.molog.log.GraphView
+        android:id="@+id/pulseGraph"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="4" />
+
+    <TextView
+        android:id="@+id/value"
+        android:layout_width="fill_parent"
+        android:layout_height="158dp"
+        android:background="#fff"
+        android:gravity="center"
+        android:text="@string/hello"
+        android:textSize="40sp" />
+
+</LinearLayout>
