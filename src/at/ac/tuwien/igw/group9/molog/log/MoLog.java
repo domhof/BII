@@ -36,6 +36,7 @@ import android.widget.TextView;
 import at.abraxas.amarino.Amarino;
 import at.abraxas.amarino.AmarinoIntent;
 import at.ac.tuwien.igw.group9.molog.R;
+import at.ac.tuwien.igw.group9.molog.db.LogData;
 
 public class MoLog extends Activity {
 
@@ -51,6 +52,7 @@ public class MoLog extends Activity {
     long lastTime = System.currentTimeMillis();
 
     Camera camera;
+    LogData logData;
 
     private ArduinoReceiver arduinoReceiver = new ArduinoReceiver();
 
@@ -86,6 +88,8 @@ public class MoLog extends Activity {
         // this is how you tell Amarino to connect to a specific BT device from
         // within your own code
         Amarino.connect(this, DEVICE_ADDRESS);
+        
+        logData = new LogData(this);
     }
 
     @Override
@@ -166,8 +170,12 @@ public class MoLog extends Activity {
 
             FileOutputStream outStream = null;
             try {
+            	long timestamp = System.currentTimeMillis();
+            	String fileName = timestamp + ".jpg";
                 // write to local sandbox file system
-                outStream = MoLog.this.openFileOutput("molog.jpg", MODE_WORLD_READABLE);
+            	
+            
+                outStream = MoLog.this.openFileOutput(fileName, MODE_WORLD_READABLE);
                 // outStream = MoLog.this.openFileOutput("d.jpg", 0);
                 // Or write to sdcard
                 // outStream = new
@@ -175,6 +183,10 @@ public class MoLog extends Activity {
                 // System.currentTimeMillis()));
                 outStream.write(data);
                 outStream.close();
+                
+                // write to DB
+                MoLog.this.logData.insert(timestamp, 0, 0, fileName);
+                
                 Log.d(TAG, "onPictureTaken - wrote bytes: " + data.length);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
