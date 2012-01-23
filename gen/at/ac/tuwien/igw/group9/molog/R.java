@@ -142,12 +142,14 @@ containing a value of this type.
         public static final int yellow=0x7f02005c;
     }
     public static final class id {
+        public static final int clearDbButton=0x7f070003;
         public static final int gallery=0x7f070000;
         public static final int galleryButton=0x7f070002;
-        public static final int gsrGraph=0x7f070003;
+        public static final int gsrGraph=0x7f070004;
+        public static final int gsrValue=0x7f070006;
         public static final int moLogButton=0x7f070001;
-        public static final int pulseGraph=0x7f070004;
-        public static final int value=0x7f070005;
+        public static final int pulseGraph=0x7f070005;
+        public static final int pulseValue=0x7f070007;
     }
     public static final class layout {
         public static final int loggallery=0x7f030000;

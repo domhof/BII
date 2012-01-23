@@ -1,4 +1,4 @@
-package at.ac.tuwien.igw.group9.molog.db;
+ package at.ac.tuwien.igw.group9.molog.db;
 
 import android.app.Activity;
 import android.content.ContentValues;
@@ -42,11 +42,11 @@ public class LogData extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		clearDB(db);
-		createDB(db);
 	}
 
 	private void clearDB(SQLiteDatabase db) {
 		db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+		createDB(db);
 	}
 
 	private Cursor getCursorAll() {
@@ -90,5 +90,9 @@ public class LogData extends SQLiteOpenHelper {
 		SQLiteDatabase db = getReadableDatabase();
 		return (int) DatabaseUtils.queryNumEntries(db, TABLE_NAME);
 	}
+	
+	public void closeDB() {
+		close();
+	} 
 
 }

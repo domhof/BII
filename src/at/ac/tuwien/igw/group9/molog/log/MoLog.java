@@ -18,6 +18,7 @@
  */
 package at.ac.tuwien.igw.group9.molog.log;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,14 +41,33 @@ import at.ac.tuwien.igw.group9.molog.db.LogData;
 
 public class MoLog extends Activity {
 
-    private static final String TAG = "SensorGraph";
+    private static final String TMP_JPG = "tmp.jpg";
+
+	private static final String TAG = "SensorGraph";
 
     // change this to your Bluetooth device address
     private static final String DEVICE_ADDRESS = "00:06:66:05:61:E9"; // "00:06:66:03:73:7B";
 
     private GraphView gsrGraph;
     private GraphView pulseGraph;
-    private TextView mValueTV;
+    private TextView mGsrValueTV;
+    private TextView mPulseValue;
+    
+    // current read values;
+    int gsrValue = 1023;
+	int pulseValue = 255;
+	
+	// GSR
+	int oldCompGsrValue = 0;
+	
+	private static final int MIN_DELTA_GSR = 40;
+	private static final int MAX_DELTA_GSR = 200; 
+	
+	// Pulse
+	int oldCompPulseValue = 0;
+	
+	private static final int MIN_DELTA_PULSE = 10;
+	private static final int MAX_DELTA_PULSE = 30;
 
     long lastTime = System.currentTimeMillis();
 
@@ -66,10 +86,12 @@ public class MoLog extends Activity {
         // get handles to Views defined in our layout file
         gsrGraph = (GraphView) findViewById(R.id.gsrGraph);
         pulseGraph = (GraphView) findViewById(R.id.pulseGraph);
-        mValueTV = (TextView) findViewById(R.id.value);
+        
+        mGsrValueTV = (TextView) findViewById(R.id.gsrValue);
+        mPulseValue = (TextView) findViewById(R.id.pulseValue);
 
         gsrGraph.setMaxValue(1024);
-        pulseGraph.setMaxValue(1024);
+        pulseGraph.setMaxValue(256);
     }
 
     @Override
@@ -77,9 +99,6 @@ public class MoLog extends Activity {
         super.onStart();
 
         camera = Camera.open();
-
-        camera.startPreview();
-        camera.takePicture(shutterCallback, rawCallback, jpegCallback);
 
         // in order to receive broadcasted intents we need to register our
         // receiver
@@ -97,7 +116,8 @@ public class MoLog extends Activity {
         super.onStop();
 
         camera.release();
-
+        logData.closeDB();
+        
         // if you connect in onStart() you must not forget to disconnect when
         // your app is closed
         Amarino.disconnect(this, DEVICE_ADDRESS);
@@ -111,8 +131,7 @@ public class MoLog extends Activity {
      * 
      * It extracts data from the intent and updates the graph accordingly.
      */
-    public class ArduinoReceiver extends BroadcastReceiver {
-
+    public class ArduinoReceiver extends BroadcastReceiver {  	
         @Override
         public void onReceive(Context context, Intent intent) {
             String data = null;
@@ -136,7 +155,7 @@ public class MoLog extends Activity {
             if (dataType == AmarinoIntent.STRING_EXTRA) {
                 data = intent.getStringExtra(AmarinoIntent.EXTRA_DATA);
 
-                Log.d(TAG, "Received: " + data);
+//                Log.d(TAG, "Received: " + data);
 
                 if (data.length() <= 1)
                     return;
@@ -144,24 +163,45 @@ public class MoLog extends Activity {
                 String type = data.substring(0, 1);
 
                 if (type.equals("G")) {
-                    final int value = Integer.parseInt(data.substring(1, data.length()));
-                    mValueTV.setText(String.valueOf(value));
-                    // since we know that our string value is an int
-                    // number
-                    // we can parse it to an integer
-                    pulseGraph.addDataPoint(value);
-                    long currentTimeMillis = System.currentTimeMillis();
-                    if (lastTime < currentTimeMillis - 2000) {
-                        // camera.startPreview();
-                        // camera.takePicture(shutterCallback, rawCallback,
-                        // jpegCallback);
-                        lastTime = currentTimeMillis;
-                    }
+                    gsrValue = Integer.parseInt(data.substring(1, data.length()));
+                    mGsrValueTV.setText("GSR: " + String.valueOf(gsrValue));
+                    gsrGraph.addDataPoint(gsrValue);
+                    triggerCamera();
+                } else if (type.equals("P")) {
+                	pulseValue = Integer.parseInt(data.substring(1, data.length()));
+                	mPulseValue.setText("Pulse: " + String.valueOf(pulseValue));
+                    pulseGraph.addDataPoint(pulseValue);
+                    triggerCamera();
                 }
             }
         }
     }
-
+    
+    private void triggerCamera() {
+    	long currentTimeMillis = System.currentTimeMillis();
+        if (lastTime < currentTimeMillis - 2000) {
+        	
+        	int gsrDelta = gsrValue - oldCompGsrValue;
+        	int pulseDelta = pulseValue - oldCompPulseValue;
+        	
+        	if ( (gsrDelta > MIN_DELTA_GSR && gsrDelta < MAX_DELTA_GSR) || (pulseDelta > MIN_DELTA_PULSE && pulseDelta < MAX_DELTA_PULSE) ) {
+        		String fileName = currentTimeMillis + ".jpg";
+        		File from = this.getFileStreamPath(TMP_JPG);
+        		File to = this.getFileStreamPath(fileName);
+        		from.renameTo(to); 
+        		logData.insert(currentTimeMillis, gsrValue, pulseValue, fileName);
+        		Log.e(TAG, "Captured photo. gsrValue=" + gsrValue + ", pulseValue=" + pulseValue + ", fileName=" + fileName);
+        	} 
+        	
+        	oldCompGsrValue = gsrValue;
+        	oldCompPulseValue = pulseValue;
+        	
+			camera.startPreview();
+			camera.takePicture(shutterCallback, rawCallback, jpegCallback);
+            lastTime = currentTimeMillis;
+        }
+    }
+    
     /** Handles data for jpeg picture */
     PictureCallback jpegCallback = new PictureCallback() {
         public void onPictureTaken(byte[] data, Camera camera) {
@@ -170,22 +210,10 @@ public class MoLog extends Activity {
 
             FileOutputStream outStream = null;
             try {
-            	long timestamp = System.currentTimeMillis();
-            	String fileName = timestamp + ".jpg";
                 // write to local sandbox file system
-            	
-            
-                outStream = MoLog.this.openFileOutput(fileName, MODE_WORLD_READABLE);
-                // outStream = MoLog.this.openFileOutput("d.jpg", 0);
-                // Or write to sdcard
-                // outStream = new
-                // FileOutputStream(String.format("/CameraImages/d.jpg",
-                // System.currentTimeMillis()));
+                outStream = MoLog.this.openFileOutput(TMP_JPG, MODE_WORLD_READABLE);
                 outStream.write(data);
                 outStream.close();
-                
-                // write to DB
-                MoLog.this.logData.insert(timestamp, 0, 0, fileName);
                 
                 Log.d(TAG, "onPictureTaken - wrote bytes: " + data.length);
             } catch (FileNotFoundException e) {

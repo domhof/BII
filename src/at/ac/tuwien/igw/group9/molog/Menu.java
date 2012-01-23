@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import at.ac.tuwien.igw.group9.molog.db.LogData;
 import at.ac.tuwien.igw.group9.molog.log.GraphView;
 import at.ac.tuwien.igw.group9.molog.log.MoLog;
 import at.ac.tuwien.igw.group9.molog.loggallery.LogGallery;
@@ -64,6 +65,15 @@ public class Menu extends Activity {
             public void onClick(View v) {
                 Intent userCreationIntent = new Intent(v.getContext(), LogGallery.class);
                 startActivityForResult(userCreationIntent, 0);
+            }
+        });
+        
+        final Button clearDbButton = (Button) findViewById(R.id.clearDbButton);
+        clearDbButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LogData logData = new LogData(Menu.this);
+                logData.clearDB();
             }
         });
     }

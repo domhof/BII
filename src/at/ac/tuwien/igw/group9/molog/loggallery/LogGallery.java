@@ -3,6 +3,8 @@ package at.ac.tuwien.igw.group9.molog.loggallery;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import android.app.Activity;
 import android.content.Context;
@@ -44,8 +46,11 @@ public class LogGallery extends Activity {
 		g.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView parent, View v, int position,
 					long id) {
-				Toast.makeText(LogGallery.this, "" + position,
-						Toast.LENGTH_SHORT).show();
+				LogData logData = new LogData(LogGallery.this);
+				Cursor cursor = logData.all();
+				cursor.moveToPosition(position);
+				SimpleDateFormat sdf = new SimpleDateFormat();
+				Toast.makeText(LogGallery.this, "Captured at " + sdf.format(new Date(cursor.getLong(1))), Toast.LENGTH_SHORT).show();
 			}
 		});
 
@@ -54,20 +59,20 @@ public class LogGallery extends Activity {
 		registerForContextMenu(g);
 	}
 
-	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v,
-			ContextMenuInfo menuInfo) {
-		menu.add(R.string.gallery_2_text);
-	}
-
-	@Override
-	public boolean onContextItemSelected(MenuItem item) {
-		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item
-				.getMenuInfo();
-		Toast.makeText(this, "Longpress: " + info.position, Toast.LENGTH_SHORT)
-				.show();
-		return true;
-	}
+//	@Override
+//	public void onCreateContextMenu(ContextMenu menu, View v,
+//			ContextMenuInfo menuInfo) {
+//		menu.add(R.string.gallery_2_text);
+//	}
+//
+//	@Override
+//	public boolean onContextItemSelected(MenuItem item) {
+//		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item
+//				.getMenuInfo();
+//		Toast.makeText(this, "Longpress: " + info.position, Toast.LENGTH_SHORT)
+//				.show();
+//		return true;
+//	}
 
 	public class ImageAdapter extends BaseAdapter {
 		int mGalleryItemBackground;

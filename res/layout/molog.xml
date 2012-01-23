@@ -1,29 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    >
-	
+    android:orientation="vertical" >
+
     <at.ac.tuwien.igw.group9.molog.log.GraphView
         android:id="@+id/gsrGraph"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="4" />
 
-   <at.ac.tuwien.igw.group9.molog.log.GraphView
+    <at.ac.tuwien.igw.group9.molog.log.GraphView
         android:id="@+id/pulseGraph"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="4" />
 
-    <TextView
-        android:id="@+id/value"
+    <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="158dp"
-        android:background="#fff"
-        android:gravity="center"
-        android:text="@string/hello"
-        android:textSize="40sp" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/gsrValue"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="#fff"
+            android:text="GSR"
+            android:gravity="center"
+            android:textSize="40sp" />
+
+        <TextView
+            android:id="@+id/pulseValue"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="#fff"
+            android:text="Pulse"
+            android:gravity="center"
+            android:textSize="40sp" />
+    </LinearLayout>
 
 </LinearLayout>
