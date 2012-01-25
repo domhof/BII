@@ -57,6 +57,13 @@ public class MoLog extends Activity {
     int gsrValue = 1023;
 	int pulseValue = 255;
 	
+	// for smoothing the data
+	int avgGsrValue = 0;
+	int avgPulseValue = 0;
+	
+	float gsrFilterVal = 0.7f;
+	float pulseFilterVal = 0.7f;
+	
 	// GSR
 	int oldCompGsrValue = 0;
 	
@@ -136,10 +143,10 @@ public class MoLog extends Activity {
         public void onReceive(Context context, Intent intent) {
             String data = null;
 
-            // the device address from which the data was sent, we don't
-            // need it
-            // here but to demonstrate how you retrieve it
-            final String address = intent.getStringExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS);
+//            // the device address from which the data was sent, we don't
+//            // need it
+//            // here but to demonstrate how you retrieve it
+//            final String address = intent.getStringExtra(AmarinoIntent.EXTRA_DEVICE_ADDRESS);
 
             // the type of data which is added to the intent
             final int dataType = intent.getIntExtra(AmarinoIntent.EXTRA_DATA_TYPE, -1);
@@ -164,13 +171,17 @@ public class MoLog extends Activity {
 
                 if (type.equals("G")) {
                     gsrValue = Integer.parseInt(data.substring(1, data.length()));
-                    mGsrValueTV.setText("GSR: " + String.valueOf(gsrValue));
-                    gsrGraph.addDataPoint(gsrValue);
+                    avgGsrValue = smooth(gsrValue, gsrFilterVal, avgGsrValue);
+
+                    mGsrValueTV.setText("GSR: " + String.valueOf(avgGsrValue));
+                    gsrGraph.addDataPoint(avgGsrValue);
                     triggerCamera();
                 } else if (type.equals("P")) {
                 	pulseValue = Integer.parseInt(data.substring(1, data.length()));
-                	mPulseValue.setText("Pulse: " + String.valueOf(pulseValue));
-                    pulseGraph.addDataPoint(pulseValue);
+                	avgPulseValue = smooth(pulseValue, pulseFilterVal, avgPulseValue);
+                	
+                	mPulseValue.setText("Pulse: " + String.valueOf(avgPulseValue));
+                    pulseGraph.addDataPoint(avgPulseValue);
                     triggerCamera();
                 }
             }
@@ -181,20 +192,20 @@ public class MoLog extends Activity {
     	long currentTimeMillis = System.currentTimeMillis();
         if (lastTime < currentTimeMillis - 2000) {
         	
-        	int gsrDelta = gsrValue - oldCompGsrValue;
-        	int pulseDelta = pulseValue - oldCompPulseValue;
+        	int gsrDelta = avgGsrValue - oldCompGsrValue;
+        	int pulseDelta = avgPulseValue - oldCompPulseValue;
         	
         	if ( (gsrDelta > MIN_DELTA_GSR && gsrDelta < MAX_DELTA_GSR) || (pulseDelta > MIN_DELTA_PULSE && pulseDelta < MAX_DELTA_PULSE) ) {
         		String fileName = currentTimeMillis + ".jpg";
         		File from = this.getFileStreamPath(TMP_JPG);
         		File to = this.getFileStreamPath(fileName);
         		from.renameTo(to); 
-        		logData.insert(currentTimeMillis, gsrValue, pulseValue, fileName);
-        		Log.e(TAG, "Captured photo. gsrValue=" + gsrValue + ", pulseValue=" + pulseValue + ", fileName=" + fileName);
+        		logData.insert(currentTimeMillis, avgGsrValue, avgPulseValue, fileName);
+        		Log.e(TAG, "Captured photo. avgGsrValue=" + avgGsrValue + ", avgPulseValue=" + avgPulseValue + ", fileName=" + fileName);
         	} 
         	
-        	oldCompGsrValue = gsrValue;
-        	oldCompPulseValue = pulseValue;
+        	oldCompGsrValue = avgGsrValue;
+        	oldCompPulseValue = avgPulseValue;
         	
 			camera.startPreview();
 			camera.takePicture(shutterCallback, rawCallback, jpegCallback);
@@ -240,4 +251,15 @@ public class MoLog extends Activity {
             Log.d(TAG, "onPictureTaken - raw");
         }
     };
+    
+    private int smooth(int data, float filterVal, int smoothedVal) {
+    	  if (filterVal > 1.0f) {      // check to make sure param's are within range
+    	    filterVal = 0.99f;
+    	  }
+    	  else if (filterVal <= 0.0f) {
+    	    filterVal = 0.0f;
+    	  }
+    	  float tmpSmoothedVal = ((float)data * (1.0f - filterVal)) + ((float)smoothedVal  *  filterVal);
+    	  return (int)tmpSmoothedVal;
+    	}
 }

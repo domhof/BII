@@ -50,7 +50,12 @@ public class LogGallery extends Activity {
 				Cursor cursor = logData.all();
 				cursor.moveToPosition(position);
 				SimpleDateFormat sdf = new SimpleDateFormat();
-				Toast.makeText(LogGallery.this, "Captured at " + sdf.format(new Date(cursor.getLong(1))), Toast.LENGTH_SHORT).show();
+				Toast.makeText(
+						LogGallery.this,
+						"Captured at "
+								+ sdf.format(new Date(cursor.getLong(1)))
+								+ "\nGSR: " + cursor.getInt(2) + "\nPulse: "
+								+ cursor.getInt(3), Toast.LENGTH_SHORT).show();
 			}
 		});
 
@@ -59,20 +64,20 @@ public class LogGallery extends Activity {
 		registerForContextMenu(g);
 	}
 
-//	@Override
-//	public void onCreateContextMenu(ContextMenu menu, View v,
-//			ContextMenuInfo menuInfo) {
-//		menu.add(R.string.gallery_2_text);
-//	}
-//
-//	@Override
-//	public boolean onContextItemSelected(MenuItem item) {
-//		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item
-//				.getMenuInfo();
-//		Toast.makeText(this, "Longpress: " + info.position, Toast.LENGTH_SHORT)
-//				.show();
-//		return true;
-//	}
+	// @Override
+	// public void onCreateContextMenu(ContextMenu menu, View v,
+	// ContextMenuInfo menuInfo) {
+	// menu.add(R.string.gallery_2_text);
+	// }
+	//
+	// @Override
+	// public boolean onContextItemSelected(MenuItem item) {
+	// AdapterContextMenuInfo info = (AdapterContextMenuInfo) item
+	// .getMenuInfo();
+	// Toast.makeText(this, "Longpress: " + info.position, Toast.LENGTH_SHORT)
+	// .show();
+	// return true;
+	// }
 
 	public class ImageAdapter extends BaseAdapter {
 		int mGalleryItemBackground;
